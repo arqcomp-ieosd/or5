@@ -52,9 +52,7 @@ def test(dut):
 
     for i in range(0,32):
         dut.A_i <= i
-        print(listOfNumbers[i])
         yield RisingEdge(dut.CLK_i)
-        print(dut.R_a_o.value.integer)
         if(listOfNumbers[i] != dut.R_a_o.value.integer):
             raise TestFailure("Error! No se logro leer adecuandamente la salida del Registro A")
                     
@@ -63,14 +61,8 @@ def test(dut):
 
     for i in range(0,32):
         dut.B_i <= i
-        print(listOfNumbers[i])
         yield RisingEdge(dut.CLK_i)
-        print(dut.R_b_o.value.integer)
         if(listOfNumbers[i] != dut.R_b_o.value.integer):
             raise TestFailure("Error! No se logro leer adecuandamente la salida del Registro B")
 
-    dut.A_i <= 2
-    dut.B_i <= 3
-
-    yield RisingEdge(dut.CLK_i)
     yield RisingEdge(dut.CLK_i)
