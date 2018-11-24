@@ -1,5 +1,3 @@
-# Test for axi4 Lite Slave device
-
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer, RisingEdge, FallingEdge, Edge, Event
@@ -23,4 +21,4 @@ def test(dut):
     cocotb.fork(Clock(dut.CLK_i, CLK_PERIOD).start())
     yield Reset(dut)
 
-    yield Timer(CLK_PERIOD * 300)
+    yield Timer(CLK_PERIOD * 5)
