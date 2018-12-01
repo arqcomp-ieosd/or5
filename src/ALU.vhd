@@ -3,96 +3,70 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 
-entity ALU is
+entity alu is
 
-    generic (N : integer :=64);
-		  
-    port (
-        A_i      : in  std_logic_vector(N - 1 downto 0);
-        B_i      : in  std_logic_vector(N - 1 downto 0);
-        SAL_o    : out std_logic_vector(N - 1 downto 0);
-	    ALUop_i  : in  std_logic_vector(3 downto 0);
-	    Zero_o   : out std_logic
-        );
+generic (N : integer :=64);
+port (
+      A_i      : in  std_logic_vector(N - 1 downto 0);
+      B_i      : in  std_logic_vector(N - 1 downto 0);
+      OUTPUT_o    : out std_logic_vector(N - 1 downto 0);
+      ALUop_i  : in  std_logic_vector(3 downto 0);
+      Zero_o   : out std_logic
+      );
 end entity;
 
-architecture implementacion of ALU is
+architecture alu_arch of alu is
 
-	--constantes de opcode:
---	CONSTANT ADD    : unsigned(3 downto 0) := "0000";
---	CONSTANT SUB    : unsigned(3 downto 0) := "0001";
---	CONSTANT NOT_IN : unsigned(3 downto 0) := "0010";
---	CONSTANT AND_IN : unsigned(3 downto 0) := "0011";
---	CONSTANT OR_IN  : unsigned(3 downto 0) := "0100";
---	CONSTANT XOR_IN : unsigned(3 downto 0) := "0101";
---	CONSTANT SRL_IN : unsigned(3 downto 0) := "0110";
---	CONSTANT SLL_IN : unsigned(3 downto 0) := "0111";
---	CONSTANT SRA_IN : unsigned(3 downto 0) := "1000";   
-          
-	SIGNAL senial_aux_sal : std_logic_vector(N-1 downto 0);
-	-- SIGNAL senial_aux_SRA : std_logic_vector(N-1 downto 0); -- Señal auxiliar para realizar el desplazamiento aritmetico
-	
-	
-	begin
+constant AND_IN : std_logic_vector(3 downto 0) := "0000";  -- As defined in the book
+constant OR_IN  : std_logic_vector(3 downto 0) := "0001";  -- As defined in the book
+constant ADD    : std_logic_vector(3 downto 0) := "0010";  -- As defined in the book
+constant XOR_IN : std_logic_vector(3 downto 0) := "0101";
+constant SUB    : std_logic_vector(3 downto 0) := "0110";  -- As defined in the book
 
+constant SLL_IN : std_logic_vector(3 downto 0) := "1000";
+constant SRL_IN : std_logic_vector(3 downto 0) := "1001";
+constant SLA_IN : std_logic_vector(3 downto 0) := "1010";
+constant SRA_IN : std_logic_vector(3 downto 0) := "1011";
 
+signal output_s : std_logic_vector(N-1 downto 0);
+
+begin
 -- Se analiza el flag Z
 
-SAL_o <= senial_aux_sal;
+OUTPUT_o <= output_s;
 
-Zero_o <= '1' when senial_aux_sal = std_logic_vector(to_unsigned(0,N)) else '0'; 
+Zero_o <= '1' when output_s = std_logic_vector(to_unsigned(0,N)) else '0'; 
 
 process(A_i, B_i, ALUop_i)
-	VARIABLE aux1 : std_logic;  -- variable para SRA
-	VARIABLE aux2 : std_logic_vector(N-1 downto 0);
-	
-		begin
 
-		case ALUop_i is
-		
-					when "0000" =>
-						senial_aux_sal <= std_logic_vector((unsigned(A_i) + unsigned(B_i)));
+variable aux1 : std_logic;
+variable aux2 : std_logic_vector(N-1 downto 0);
 
-					when "0001" =>
-						senial_aux_sal <= std_logic_vector((unsigned(A_i) - unsigned(B_i)));
-					
-					when "0010" =>
-						senial_aux_sal <= not A_i;
-
-					when "0011" =>
-						senial_aux_sal <= A_i and B_i;
-
-					when "0100" =>
-						senial_aux_sal <= A_i or B_i;
-					
-					when "0101" =>
-						senial_aux_sal <= A_i xor B_i;
-						
-					when "0110" =>
-						senial_aux_sal <= std_logic_vector(shift_right(unsigned(A_i), to_integer(unsigned(B_i))));	
-					
-					when "0111" =>
-						senial_aux_sal <= std_logic_vector(shift_left(unsigned(A_i), to_integer(unsigned(B_i))));		
-								
-					when "1000" =>
-						aux1 := A_i(N-1);	-- se guarda el bit de signo
-						aux2 := std_logic_vector(shift_right(unsigned(A_i), to_integer(unsigned(B_i)))); --se hace el desplazamiento
-						
-						-- Se rellenan los bits desplazados con el bit mas significativo
-						
-						if to_integer(unsigned(B_i)) > N then
-							aux2 := (others => aux1);
-						else
-							aux2(N-1 downto N-1-to_integer(unsigned(B_i))) := (others => aux1);
-						end if;
-
-						senial_aux_sal <= aux2;				
-
-					when others => senial_aux_sal <= std_logic_vector(to_unsigned(0,N));		
-		end case;
-		
-	end process;
-end implementacion;
+begin
+    case ALUop_i is
+        when ADD =>
+            output_s <= std_logic_vector((unsigned(A_i) + unsigned(B_i)));
+        when SUB =>
+            output_s <= std_logic_vector((unsigned(A_i) - unsigned(B_i)));
+        when AND_IN =>
+            output_s <= A_i and B_i;
+        when OR_IN =>
+            output_s <= A_i or B_i;
+        when XOR_IN =>
+            output_s <= A_i xor B_i;
+        when SLL_IN =>
+            output_s <= std_logic_vector(shift_left(unsigned(A_i), to_integer(unsigned(B_i))));
+        when SRL_IN =>
+            output_s <= std_logic_vector(shift_right(unsigned(A_i), to_integer(unsigned(B_i))));
+        when SLA_IN =>
+            output_s <= std_logic_vector(shift_left(signed(A_i), to_integer(unsigned(B_i))));
+        when SRA_IN =>
+            output_s <= std_logic_vector(shift_right(signed(A_i), to_integer(unsigned(B_i))));
+        when others => output_s <= (others => '0');        
+    end case;
+        
+    end process;
+end alu_arch;
 
 
 
